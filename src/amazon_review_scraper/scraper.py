@@ -10,7 +10,7 @@ from transformers import VisionEncoderDecoderModel, TrOCRProcessor
 from PIL import Image
 from io import BytesIO
 from dotenv import load_dotenv
-from typing import List
+from typing import List, Generator
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -55,7 +55,7 @@ class AmazonReviewScraper:
     def _init_chrome_driver(self) -> webdriver.Chrome:
         """Initializes Chrome webdriver"""
         chrome_options = Options()
-        chrome_options.add_argument("--headless")
+        # chrome_options.add_argument("--headless")
         driver_path = ChromeDriverManager().install()
         if "THIRD_PARTY_NOTICES.chromedriver" in driver_path:
             driver_path = driver_path.replace("THIRD_PARTY_NOTICES.chromedriver", "chromedriver")
@@ -265,12 +265,6 @@ class AmazonReviewScraper:
         self, driver: webdriver.Chrome, url: str, review_url: str
     ) -> List[Review]:
         """Scrapes the Amazon product page for reviews"""
-
-        self._login_to_amazon(driver)
-        time.sleep(1)
-
-        self._change_locale_to_new_york(driver)
-        time.sleep(1)
         
         driver.get(url) # open the product page
         time.sleep(1)
@@ -280,32 +274,38 @@ class AmazonReviewScraper:
 
         reviews = self._get_all_reviews(driver)
 
-        self._logout_from_amazon(driver)
-
         return reviews
 
-    def scrape_amazon_reviews(self, asin_code: str) -> List[Review]:
+    def scrape_amazon_reviews(self, asin_codes: List[str]) -> Generator[List[Review], None, None]:
         """
-        Retrieves a list of reviews from Amazon for a given Amazon product ASIN code.
-
-        Returns:
-            List[Review]: A list of Review objects.
+        Retrieves reviews from Amazon for each given Amazon product ASIN code.
+        Yields:
+            A list of Review objects for each ASIN code.
         Raises:
             DriverInitializationError: If the Chrome webdriver cannot be initialized.
-            DriverGetReviewsError: If the Amazon product review data cannot be scraped from the Amazon site.
+            DriverGetReviewsError: If scraping reviews fails.
         """
-        self._logger.info(f"Scraping Amazon Reviews for product {asin_code}..")
+        self._logger.info(f"Scraping Amazon Reviews for product {asin_codes}..")
 
         try:
             driver = self._init_chrome_driver()
         except Exception as e:
             raise DriverInitializationError from e
 
-        url = amazon_review_scraper_settings.get_amazon_product_url(asin_code)
-        review_url = amazon_review_scraper_settings.get_amazon_product_reviews_url(asin_code)
-        try:
-            return self._get_reviews_from_product_page(driver, url, review_url)
-        except Exception as e:
-            raise DriverGetReviewsError from e
-        finally:
-            driver.close()
+        self._login_to_amazon(driver)
+        time.sleep(1)
+        self._change_locale_to_new_york(driver)
+        time.sleep(1)
+
+        for asin_code in asin_codes:
+            url = amazon_review_scraper_settings.get_amazon_product_url(asin_code)
+            review_url = amazon_review_scraper_settings.get_amazon_product_reviews_url(asin_code)
+            try:
+                reviews_batch = self._get_reviews_from_product_page(driver, url, review_url)
+                yield asin_code, reviews_batch
+            except Exception as e:
+                raise DriverGetReviewsError from e
+        
+        # logout and close the browser
+        self._logout_from_amazon(driver)
+        driver.close()
