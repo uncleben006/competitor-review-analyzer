@@ -17,6 +17,12 @@ selenium = "^4.22.0"
 webdriver-manager = "^4.0.1"
 pydantic-settings = "^2.3.4"
 blinker="<1.8.0"
+dotenv = "^0.9.9"
+pytesseract = "^0.3.13"
+transformers = "^4.49.0"
+torch = "^2.6.0"
+torchvision = "^0.21.0"
+torchaudio = "^2.6.0"
 
 
 [build-system]

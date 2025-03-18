@@ -54,4 +54,6 @@ class AmazonReviewDataCollector:
             self._logger.info(f"No reviews found for given product {asin_code}.")
             return
 
+        datetime = pd.Timestamp.now().strftime("%Y%m%d%H%M")
+        self._output_file = f"data/{asin_code}_{datetime}_reviews.csv"
         self._save_to_csv(reviews)

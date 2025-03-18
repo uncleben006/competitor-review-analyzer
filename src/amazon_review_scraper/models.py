@@ -10,3 +10,6 @@ class Review(BaseModel):
     content: str
     rating: int
     title: str
+    review_date: str
+    verified_purchase: bool
+    helpful_text: str
