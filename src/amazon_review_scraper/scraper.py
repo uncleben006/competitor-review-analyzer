@@ -55,7 +55,7 @@ class AmazonReviewScraper:
     def _init_chrome_driver(self) -> webdriver.Chrome:
         """Initializes Chrome webdriver"""
         chrome_options = Options()
-        # chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--headless")
         driver_path = ChromeDriverManager().install()
         if "THIRD_PARTY_NOTICES.chromedriver" in driver_path:
             driver_path = driver_path.replace("THIRD_PARTY_NOTICES.chromedriver", "chromedriver")
@@ -182,7 +182,7 @@ class AmazonReviewScraper:
             self._logger.info(product_inventory_status)
         except Exception as e:
             self._logger.exception(f"爬取 {asin_code} 產品頁資料時發生錯誤: {e}")
-            
+
         return Product(
             ident_code=asin_code,
             name=product_name,
