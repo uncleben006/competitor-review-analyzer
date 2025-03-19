@@ -23,7 +23,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 
 from amazon_review_scraper.conf import amazon_review_scraper_settings
-from amazon_review_scraper.models import Review
+from amazon_review_scraper.models import Product, Review
 
 load_dotenv()
 logging.getLogger("WDM").setLevel(logging.ERROR)
@@ -85,7 +85,6 @@ class AmazonReviewScraper:
         self._handle_captcha(driver)
         time.sleep(1)
 
-    # 要做錯誤處理
     def _handle_captcha(self, driver: webdriver.Chrome) -> None:
         """利用 Hugging Face OCR 模型處理 Captcha 驗證，最多重試 3 次，直到驗證通過 (找到 id 為 ap_email 的輸入欄位)"""
         max_attempts = 3
@@ -162,6 +161,36 @@ class AmazonReviewScraper:
         ActionChains(driver).move_to_element(account_nav).perform() # hover to show the sign out button
         sign_out = WebDriverWait(driver, 60).until(EC.element_to_be_clickable((By.ID, "nav-item-signout")))
         sign_out.click()
+
+    def _get_product_info(self, driver: webdriver.Chrome, asin_code: str) -> Product:
+        """
+        從 Amazon 商品頁面爬取所需資料
+        """
+        self._logger.info(f"開始爬取 {asin_code} 產品頁資料...")
+        try:
+            product_name = WebDriverWait(driver, 180).until(EC.presence_of_element_located((By.ID, "productTitle"))).text
+            product_base_price_block = WebDriverWait(driver, 180).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".basisPrice")))
+            price_str = product_base_price_block.find_element(By.CSS_SELECTOR, ".a-offscreen").get_attribute("innerHTML")
+            base_price = float(price_str.replace("$", "").strip())
+            price_int = WebDriverWait(driver, 180).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".priceToPay span.a-price-whole"))).text
+            price_decimal = WebDriverWait(driver, 180).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".priceToPay span.a-price-fraction"))).text
+            final_price = float( price_int + "." + price_decimal )
+            product_inventory_status = WebDriverWait(driver, 180).until(EC.presence_of_element_located((By.ID, "availability"))).text
+            self._logger.info(product_name)
+            self._logger.info(base_price)
+            self._logger.info(final_price)
+            self._logger.info(product_inventory_status)
+        except Exception as e:
+            self._logger.exception(f"爬取 {asin_code} 產品頁資料時發生錯誤: {e}")
+            
+        return Product(
+            ident_code=asin_code,
+            name=product_name,
+            base_price=base_price,
+            final_price=final_price,
+            inventory_status=product_inventory_status
+        )
+        
 
     def _get_all_reviews(self, driver: webdriver.Chrome) -> List[Review]:
         """
@@ -261,22 +290,21 @@ class AmazonReviewScraper:
         done_button.click()
         driver.refresh()
 
-    def _get_reviews_from_product_page(
-        self, driver: webdriver.Chrome, url: str, review_url: str
-    ) -> List[Review]:
-        """Scrapes the Amazon product page for reviews"""
-        
-        driver.get(url) # open the product page
+    def _get_product_from_product_page(self, driver: webdriver.Chrome, url: str, asin_code: str) -> Product:
+        """Scrapes Amazon product page for product information"""
+        driver.get(url)
         time.sleep(1)
+        product = self._get_product_info(driver, asin_code)
+        return product
 
+    def _get_reviews_from_product_review_page(self, driver: webdriver.Chrome, review_url: str) -> List[Review]:
+        """Scrapes Amazon product review page for reviews"""
         driver.get(review_url) # open the product reviews page and get the reviews
         time.sleep(1)
-
         reviews = self._get_all_reviews(driver)
-
         return reviews
 
-    def scrape_amazon_reviews(self, asin_codes: List[str]) -> Generator[List[Review], None, None]:
+    def scrape_amazon_products_and_reviews(self, asin_codes: List[str]) -> Generator[List[Review], None, None]:
         """
         Retrieves reviews from Amazon for each given Amazon product ASIN code.
         Yields:
@@ -301,8 +329,9 @@ class AmazonReviewScraper:
             url = amazon_review_scraper_settings.get_amazon_product_url(asin_code)
             review_url = amazon_review_scraper_settings.get_amazon_product_reviews_url(asin_code)
             try:
-                reviews_batch = self._get_reviews_from_product_page(driver, url, review_url)
-                yield asin_code, reviews_batch
+                product = self._get_product_from_product_page(driver, url, asin_code)
+                reviews_batch = self._get_reviews_from_product_review_page(driver, review_url)
+                yield asin_code, product, reviews_batch
             except Exception as e:
                 raise DriverGetReviewsError from e
         
