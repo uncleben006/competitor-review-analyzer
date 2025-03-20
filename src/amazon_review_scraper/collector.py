@@ -34,12 +34,13 @@ class AmazonReviewDataCollector:
         df = pd.DataFrame(model_obejcts)
         df.to_csv(self._output_file)
 
-    def collect_amazon_review_data(self, asin_codes: List[str]) -> None:
+    def collect_amazon_review_data(self, asin_codes: List[str], timestamp: str) -> None:
         """
         Scrapes reviews from a given Amazon product page based on given ASIN code and stores it into a CSV file.
 
         Args:
-            asin_code (str): The ASIN code of the Amazon product for which to scrape reviews.
+            asin_codes (List[str]): The ASIN codes of the Amazon product for which to scrape reviews.
+            timestamp (str): A timestamp string in the format YYYYMMDDHHMM representing year, month, day, hour, and minute.
         """
         self._logger.info(f"Getting Amazon reviews for ASIN codes {asin_codes}..")
         try:
@@ -47,7 +48,6 @@ class AmazonReviewDataCollector:
                 if not reviews:
                     self._logger.info(f"No reviews found for given product {asin_code}.")
                     continue
-                timestamp = pd.Timestamp.now().strftime("%Y%m%d%H%M")
                 reviews_folder = os.path.join("reviews", "amazon")
                 product_folder = os.path.join("products", "amazon")
                 os.makedirs(reviews_folder, exist_ok=True)
