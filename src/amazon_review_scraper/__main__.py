@@ -21,7 +21,13 @@ logging.basicConfig(level=logging.INFO)
     help="The ASIN code(s) of the product(s) for which to scrape Amazon reviews. "
          "You can pass a single code, a comma-separated list, or multiple options."
 )
-def scrape_amazon_reviews(asin_codes) -> None:
+@click.option(
+    "--timestamp",
+    required=True,
+    type=str,
+    help="The timestamp string used as a prefix for output files."
+)
+def scrape_amazon_reviews(asin_codes, timestamp) -> None:
     # 如果只提供了一個元素，檢查是否包含逗號
     if len(asin_codes) == 1:
         if "," in asin_codes[0]:
@@ -32,7 +38,7 @@ def scrape_amazon_reviews(asin_codes) -> None:
         asin_codes = list(asin_codes)
     
     collector = AmazonReviewDataCollector()
-    collector.collect_amazon_review_data(asin_codes)
+    collector.collect_amazon_review_data(asin_codes, timestamp)
 
 
 if __name__ == "__main__":

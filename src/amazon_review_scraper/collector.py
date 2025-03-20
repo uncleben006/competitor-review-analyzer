@@ -32,7 +32,7 @@ class AmazonReviewDataCollector:
         self._logger.info(f"Writing {len(datas)} records to {self._output_file}..")
         model_obejcts = [data.model_dump() for data in datas]
         df = pd.DataFrame(model_obejcts)
-        df.to_csv(self._output_file)
+        df.to_csv(self._output_file, index=False)
 
     def collect_amazon_review_data(self, asin_codes: List[str], timestamp: str) -> None:
         """
