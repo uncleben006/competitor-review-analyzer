@@ -55,11 +55,17 @@ class AmazonReviewScraper:
     def _init_chrome_driver(self) -> webdriver.Chrome:
         """Initializes Chrome webdriver"""
         chrome_options = Options()
+        chrome_options.add_experimental_option("prefs", {
+            "credentials_enable_service": False, # 禁止跳出儲存密碼提示
+            "profile.password_manager_enabled": False, # 禁止密碼管理服務
+            "profile.default_content_setting_values.notifications": 2 # 禁止通知提示
+        })
         chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
         driver_path = ChromeDriverManager().install()
         if "THIRD_PARTY_NOTICES.chromedriver" in driver_path:
             driver_path = driver_path.replace("THIRD_PARTY_NOTICES.chromedriver", "chromedriver")
-        # print(driver_path)
         service = Service(driver_path)
         driver = webdriver.Chrome(service=service, options=chrome_options)
         return driver
@@ -191,7 +197,6 @@ class AmazonReviewScraper:
             inventory_status=product_inventory_status
         )
         
-
     def _get_all_reviews(self, driver: webdriver.Chrome) -> List[Review]:
         """
         從 Amazon 商品評論頁面爬取所有留言（分頁），直到沒有下一頁。
