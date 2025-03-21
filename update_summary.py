@@ -3,7 +3,7 @@ import glob
 import os
 import requests
 
-WEBHOOK_URL = "https://auto.uncleben006.site/webhook/932aef38-4584-487b-9db6-2c39e2474434"
+WEBHOOK_URL = "https://auto.uncleben006.site/webhook/update-reviews"
 
 def update_reviews_summary(timestamp):
     data_payload = {'timestamp': timestamp}
