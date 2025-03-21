@@ -53,9 +53,9 @@ def extract_prod_info(product_url):
     product_data = initial_data["product"]
 
     return {
-        "item_id": product_data["usItemId"],
-        "product_name": product_data["name"],
+        "ident_code": product_data["usItemId"],
+        "name": product_data["name"],
         "base_price": product_data["priceInfo"]["wasPrice"]["price"],
         "final_price": product_data["priceInfo"]["currentPrice"]["price"],
-        "availability": product_data["availabilityStatus"],
+        "inventory_status": product_data["availabilityStatus"],
     }

@@ -69,11 +69,11 @@ def extract_prod_info(product_url):
     reviews_link = soup.find("div", class_="see-all-reviews-button-container").find("a")["href"]
 
     return {
-        "item_id": item_id,
-        "product_name": product_name,
+        "ident_code": item_id,
+        "name": product_name,
         "base_price": base_price,
         "final_price": final_price,
-        "availability": availability,
+        "inventory_status": availability,
         "reviews_link": site_url + reviews_link + "&sort=MOST_RECENT",
     }
 
