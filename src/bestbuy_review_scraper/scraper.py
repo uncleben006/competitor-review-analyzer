@@ -1,4 +1,3 @@
-import browsercookie
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -14,14 +13,8 @@ HEADERS = {
 site_url = "https://www.bestbuy.com"
 
 def extract_prod_reviews(review_url):
-    # dump cookies to file
-    # cj = browsercookie.chrome()
-    # target_domain = "bestbuy.com"
-    # cookies_dict = {cookie.name: cookie.value for cookie in cj if target_domain in cookie.domain}
-    # with open('cookies.json', 'w') as f:
-    #     json.dump(cookies_dict, f, indent=4)
 
-    with open('cookies.json', 'r') as f:
+    with open('bestbuy_cookies.json', 'r') as f:
         cookies_dict = json.load(f)
     response = requests.get(review_url, headers=HEADERS, cookies=cookies_dict)
     soup = BeautifulSoup(response.text, "html.parser")
@@ -46,14 +39,8 @@ def extract_prod_reviews(review_url):
     
 
 def extract_prod_info(product_url):
-    # dump cookies to file
-    # cj = browsercookie.chrome()
-    # target_domain = "bestbuy.com"
-    # cookies_dict = {cookie.name: cookie.value for cookie in cj if target_domain in cookie.domain}
-    # with open('cookies.json', 'w') as f:
-    #     json.dump(cookies_dict, f, indent=4)
     
-    with open('cookies.json', 'r') as f:
+    with open('bestbuy_cookies.json', 'r') as f:
         cookies_dict = json.load(f)
     response = requests.get(product_url, headers=HEADERS, cookies=cookies_dict)
     soup = BeautifulSoup(response.text, "html.parser")

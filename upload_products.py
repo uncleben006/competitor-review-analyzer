@@ -8,7 +8,10 @@ WEBHOOK_URL = "https://auto.uncleben006.site/webhook/f69a9e9b-db3b-47ad-a63f-3a3
 
 def post_to_webhook(data):
     response = requests.post(WEBHOOK_URL, json=data)
-    print(f"Posted {data['id']} - Status Code: {response.status_code}")
+    if response.status_code == 200:
+        print(f"Posted {data['id']} - Status Code: {response.status_code}")
+    else:
+        print(f"Failed to post {data['id']} - Response: {response.text}")
 
 def process_csv_files(timestamp):
     csv_files = glob.glob(f'products/*/{timestamp}_*.csv')

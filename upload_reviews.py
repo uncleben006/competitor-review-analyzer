@@ -20,7 +20,10 @@ def upload_reviews(timestamp):
             files_payload = {'file': (filename, file, 'text/csv')}
             data_payload = {'source': source}
             response = requests.post(WEBHOOK_URL, files=files_payload, data=data_payload)
-            print(f"Uploaded {filename} with source {source}. Response: {response.status_code}")
+            if response.status_code == 200:
+                print(f"Uploaded {filename} with source {source}. Response: {response.status_code}")
+            else:
+                print(f"Failed to upload {filename} with source {source}. Response: {response.text}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Upload review files by timestamp")
