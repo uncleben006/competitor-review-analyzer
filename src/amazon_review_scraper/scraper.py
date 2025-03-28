@@ -53,47 +53,6 @@ class AmazonReviewScraper:
             self._ocr_processor = None
             self._ocr_model = None
 
-    def _add_headers(self, driver: webdriver.Chrome) -> None:
-        """Add custom headers to the webdriver"""
-        custom_headers = {
-            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-            "accept-language": "zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7,zh-CN;q=0.6,de;q=0.5,fr;q=0.4,ko;q=0.3,ja;q=0.2",
-            "device-memory": "8",
-            "downlink": "10",
-            "dpr": "2",
-            "ect": "4g",
-            "priority": "u=0, i",
-            "rtt": "0",
-            "sec-ch-device-memory": "8",
-            "sec-ch-dpr": "2",
-            "sec-ch-ua": "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\"",
-            "sec-ch-ua-mobile": "?0",
-            "sec-ch-ua-platform": "\"macOS\"",
-            "sec-ch-ua-platform-version": "\"14.6.1\"",
-            "sec-ch-viewport-width": "1435",
-            "sec-fetch-dest": "document",
-            "sec-fetch-mode": "navigate",
-            "sec-fetch-site": "none",
-            "sec-fetch-user": "?1",
-            "upgrade-insecure-requests": "1",
-            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
-            "viewport-width": "1435"
-        }
-        driver.execute_cdp_cmd("Network.setExtraHTTPHeaders", {"headers": custom_headers})
-    
-    def _add_cookies(self, driver: webdriver.Chrome) -> None:
-        """Add custom cookies to the webdriver"""
-        with open('amazon_cookies.json', 'r') as f:
-            cookies_dict = json.load(f)
-        # 將 dictionary 中的每個 cookie 加入到瀏覽器中
-        for name, value in cookies_dict.items():
-            cookie = {
-                "name": name,
-                "value": value,
-                "domain": ".amazon.com"  # 指定 cookie 所屬的網域
-            }
-            driver.add_cookie(cookie)
-
     def _init_chrome_driver(self) -> webdriver.Chrome:
         """Initializes Chrome webdriver"""
         chrome_options = Options()
@@ -110,7 +69,6 @@ class AmazonReviewScraper:
             driver_path = driver_path.replace("THIRD_PARTY_NOTICES.chromedriver", "chromedriver")
         service = Service(driver_path)
         driver = webdriver.Chrome(service=service, options=chrome_options)
-        self._add_headers(driver)
         return driver
 
     def _login_to_amazon(self, driver: webdriver.Chrome) -> None:
@@ -119,7 +77,6 @@ class AmazonReviewScraper:
         若檢測到 Amazon 跳出 Captcha 驗證，會透過 OCR 辨識圖片中的文字，並自動填入驗證欄位，再提交表單。
         """
         driver.get("https://www.amazon.com/account/")
-        self._add_cookies(driver)
         self._handle_captcha(driver)
         time.sleep(1)
 
